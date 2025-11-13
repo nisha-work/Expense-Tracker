@@ -1,44 +1,44 @@
 const xlsx = require('xlsx');
-const Income = require("../models/Income");
+const Expense = require("../models/Expense");
 const path = require('path');
 
-//add income source
-exports.addIncome = async (req, res) => {
+//add expense source
+exports.addExpense = async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const { icon, source, amount, date } = req.body;
+        const { icon, category, amount, date } = req.body;
 
         //validation: check for missing fields
-        if (!source || !amount || !date) {
+        if (!category || !amount || !date) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
-        const newIncome = new Income({
+        const newExpense = new Expense({
             userId,
             icon,
-            source,
+            category,
             amount,
             date: new Date(date)
         });
 
-        await newIncome.save();
-        res.status(200).json(newIncome);
+        await newExpense.save();
+        res.status(200).json(newExpense);
     } catch (error) {
-        console.error("Error adding income:", error.message);
+        console.error("Error adding expense:", error.message);
         res.status(500).json({ message: "Server Error" });
     }
 }
 
-//get all income source
-exports.getAllIncome = async (req, res) => {
+//get all expense source
+exports.getAllExpense = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const income = await Income.find({ userId }).sort({ date: -1 });
-    res.status(200).json(income);
+    const expense = await Expense.find({ userId }).sort({ date: -1 });
+    res.status(200).json(expense);
   } catch (error) {
-    console.error("Error in getAllIncome:", error.message);
+    console.error("Error in getAllExpense:", error.message);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -55,29 +55,29 @@ exports.getAllIncome = async (req, res) => {
 };
 */
 
-//delete income source
-exports.deleteIncome = async (req, res) => {
+//delete expense source
+exports.deleteExpense = async (req, res) => {
   try {
-    // Find the income by ID
-    const income = await Income.findById(req.params.id);
+    // Find the expense by ID
+    const expense = await Expense.findById(req.params.id);
 
     // If not found
-    if (!income) {
-      return res.status(404).json({ message: "Income not found" });
+    if (!expense) {
+      return res.status(404).json({ message: "Expense not found" });
     }
 
-    // Ensure the income belongs to the logged-in user
-    if (income.userId.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Not authorized to delete this income" });
+    // Ensure the expense belongs to the logged-in user
+    if (expense.userId.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this expense" });
     }
 
     // Delete it
-    await income.deleteOne();
+    await expense.deleteOne();
 
     // ✅ Always send a response
-    return res.status(200).json({ message: "Income deleted successfully" });
+    return res.status(200).json({ message: "Expense deleted successfully" });
   } catch (error) {
-    console.error("Error deleting income:", error.message);
+    console.error("Error deleting expense:", error.message);
     return res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -93,28 +93,28 @@ exports.deleteIncome = async (req, res) => {
 */
 
 //download excel
-exports.downloadIncomeExcel = async (req, res) => {
+exports.downloadExpenseExcel = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const income = await Income.find({ userId }).sort({ date: -1 });
+    const expense = await Expense.find({ userId }).sort({ date: -1 });
 
-    if (!income || income.length === 0) {
-      return res.status(404).json({ message: "No income data found" });
+    if (!expense || expense.length === 0) {
+      return res.status(404).json({ message: "No expense data found" });
     }
 
-    const data = income.map((item) => ({
-      Category: item.category,
+    const data = expense.map((item) => ({
+      Source: item.source,
       Amount: item.amount,
       Date: item.date.toISOString().split("T")[0],
     }));
 
     const wb = xlsx.utils.book_new();
     const ws = xlsx.utils.json_to_sheet(data);
-    xlsx.utils.book_append_sheet(wb, ws, "Income");
+    xlsx.utils.book_append_sheet(wb, ws, "Expense");
 
-    // Save to project folder (backend/uploads/income_details.xlsx)
-    const filePath = path.join(__dirname, "../uploads/income_details.xlsx");
+    // Save to project folder (backend/uploads/expense_details.xlsx)
+    const filePath = path.join(__dirname, "../uploads/expense_details.xlsx");
     xlsx.writeFile(wb, filePath);
 
     // Send file as download to Postman
