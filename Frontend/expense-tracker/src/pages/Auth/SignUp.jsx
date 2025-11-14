@@ -9,6 +9,8 @@ import axios from 'axios';
 import axiosInstance from '../../utils/axiosInstance';
 import { API_PATHS } from '../../utils/apiPaths';
 import { UserContext } from '../../context/userContext';
+import uploadImage from "../../utils/uploadImage";
+
 
 
 const SignUp = () => {
@@ -46,6 +48,8 @@ const SignUp = () => {
 
       //upload image if present
       if (profilePic) {
+        console.log("ProfilePic value:", profilePic);
+
         const imgUploadRes = await uploadImage(profilePic);
         profileImageUrl = imgUploadRes.imageUrl || "";
       }
@@ -59,11 +63,11 @@ const SignUp = () => {
       
       const { token, user } = response.data;
 
-      if (token) {
+      /*if (token) {
         localStorage.setItem("token", token);
-        updateUser(user);
+        updateUser(user);*/
         navigate("/dashboard");
-      }
+      //}
     } catch (error) {
       if (error.response && error.response.data.message) {
         setError(error.response.data.message);
@@ -109,4 +113,4 @@ const SignUp = () => {
   )
 }
 
-export default SignUp
+export default SignUp;
